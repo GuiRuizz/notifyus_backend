@@ -1,12 +1,15 @@
 const express = require("express");
 const admin = require("firebase-admin");
 const cors = require("cors");
-const serviceAccount = require("./serviceAccount.json");
-
+require("dotenv").config();
 const app = express();
 
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT
+);
+
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
 app.use(cors());
@@ -100,6 +103,8 @@ app.post("/send", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Servidor rodando na porta 3000 🚀");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT} 🚀`);
 });
