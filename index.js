@@ -2,6 +2,7 @@ const express = require("express");
 const admin = require("firebase-admin");
 const cors = require("cors");
 require("dotenv").config();
+
 const app = express();
 
 const serviceAccount = JSON.parse(
@@ -15,19 +16,6 @@ admin.initializeApp({
 app.use(cors());
 app.use(express.json());
 
-/*
-  Estrutura:
-  [
-    {
-      token: "...",
-      platform: "android"
-    },
-    {
-      token: "...",
-      platform: "web"
-    }
-  ]
-*/
 let devices = [];
 
 
@@ -65,10 +53,18 @@ app.post("/register-device", (req, res) => {
 
 // Enviar push para todos os dispositivos
 app.post("/send", async (req, res) => {
-  const { title, body } = req.body;
+  const {
+    title,
+    body,
+    imageUrl,
+    color,
+    data
+  } = req.body;
 
   try {
-    const tokens = devices.map((device) => device.token);
+    const tokens = devices.map(
+      (device) => device.token
+    );
 
     if (tokens.length === 0) {
       return res.status(400).json({
@@ -81,9 +77,34 @@ app.post("/send", async (req, res) => {
       .messaging()
       .sendEachForMulticast({
         tokens,
+
         notification: {
           title: title || "Nova notificação",
-          body: body || "Mensagem enviada"
+          body: body || "Mensagem enviada",
+          imageUrl: imageUrl || undefined,
+        },
+
+        data: data || {},
+
+        android: {
+          notification: {
+            color: color || "#2196F3",
+          }
+        },
+
+        webpush: {
+          notification: {
+            icon: imageUrl || undefined,
+            image: imageUrl || undefined,
+          }
+        },
+
+        apns: {
+          payload: {
+            aps: {
+              sound: "default"
+            }
+          }
         }
       });
 
@@ -102,6 +123,12 @@ app.post("/send", async (req, res) => {
     });
   }
 });
+
+
+app.get("/", (req, res) => {
+  res.send("API rodando 🚀");
+});
+
 
 const PORT = process.env.PORT || 3000;
 
